@@ -50,6 +50,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import numpy as np
+from tqdm import trange
 import logging
 
 logger = logging.getLogger(__name__)
@@ -158,8 +159,7 @@ def art(probe, data, init, niter=10):
 
     _init = np.zeros(init.shape)
 
-    for n in range(niter):
-        update_progress(n/niter)
+    for n in trange(niter, desc="art", leave=True):
         for m in range(len(probe.history)):
         # for m in range(3000):
             x0 = probe.history[m][0]
@@ -211,7 +211,7 @@ def art(probe, data, init, niter=10):
             if not dist2 == 0:
                 upd = np.true_divide((data[m] - sim), dist2)
                 init[ix[ind], iy[ind]] += dist[ind] * upd
-    update_progress(1)
+
     return init
 
 
@@ -224,12 +224,11 @@ def sirt(probe, data, init, niter=10):
     gx = np.linspace(0, 1, sy + 1)
     gy = np.linspace(0, 1, sy + 1)
 
-    for n in range(niter):
+    for n in trange(niter, desc="sirt", leave=True):
 
         update = np.zeros(init.shape)
         sumdist = np.zeros(init.shape)
 
-        update_progress(n/niter)
         for m in range(len(probe.history)):
         # for m in range(100):
             x0 = probe.history[m][0]
@@ -283,7 +282,7 @@ def sirt(probe, data, init, niter=10):
                 update[ix[ind], iy[ind]] += dist[ind] * upd
 
         init += np.true_divide(update, sumdist * sy)
-    update_progress(1)
+
     return init
 
 
@@ -296,12 +295,11 @@ def mlem(probe, data, init, niter=10):
     gx = np.linspace(0, 1, sy + 1)
     gy = np.linspace(0, 1, sy + 1)
 
-    for n in range(niter):
+    for n in trange(niter, desc="mlem", leave=True):
 
         update = np.zeros(init.shape)
         sumdist = np.zeros(init.shape)
 
-        update_progress(n/niter)
         for m in range(len(probe.history)):
         # for m in range(3000):
         # for m in range(100):
@@ -356,9 +354,8 @@ def mlem(probe, data, init, niter=10):
                 update[ix[ind], iy[ind]] += dist[ind] * upd
 
         init[sumdist > 0] *= np.true_divide(update[sumdist > 0], sumdist[sumdist > 0] * sy)
-    update_progress(1)
-    return init
 
+    return init
 
 
 def stream(probe, data, init):
@@ -370,8 +367,8 @@ def stream(probe, data, init):
     gx = np.linspace(0, 1, sy + 1)
     gy = np.linspace(0, 1, sy + 1)
 
-    for m in range(3000):
-        print (m)
+    for m in trange(3000, desc="stream", leave=True):
+        print(m)
 
         update = np.zeros(init.shape)
         sumdist = np.zeros(init.shape)
