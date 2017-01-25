@@ -50,6 +50,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import numpy as np
+from tqdm import trange
 from numbers import Number
 from xdesign.geometry import *
 from xdesign.geometry import beamintersect, beamcirc
@@ -164,8 +165,8 @@ def sinogram(sx, sy, phantom, noise=False):
     """
     scan = raster_scan(sx, sy)
     sino = np.zeros((sx, sy))
-    for m in range(sx):
-        for n in range(sy):
+    for m in trange(sx, desc="sinogram", leave=True):
+        for n in trange(sy, desc="sweep", leave=False):
             sino[m, n] = next(scan).measure(phantom, noise)
     return sino
 
@@ -188,8 +189,8 @@ def angleogram(sx, sy, phantom, noise=False):
     """
     scan = angle_scan(sx, sy)
     angl = np.zeros((sx, sy))
-    for m in range(sx):
-        for n in range(sy):
+    for m in trange(sx, desc="angleogram", leave=True):
+        for n in trange(sy, desc="sweep", leave=False):
             angl[m, n] = next(scan).measure(phantom, noise)
     return angl
 
