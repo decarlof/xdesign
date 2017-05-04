@@ -61,15 +61,26 @@ __copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
 __docformat__ = 'restructuredtext en'
 __all__ = ['reconstruct', 'art', 'sirt', 'mlem', 'stream', 'update_progress']
 
+"""Defines unoptimized implementations of popular reconstruction methods.
+
+The algorithm module contains methods for reconstructing tomographic data
+including gridrec, SIRT, ART, and MLEM. These methods can be used as benchmarks
+for custom reconstruction methods or as an easy way to access reconstruction
+algorithms for developing other methods such as noise correction.
+"""
+
 
 def update_progress(progress):
-    '''Draws a process bar in the terminal.
+    """Draw a process bar in the terminal.
 
     Parameters
     -------------
     process : float
         The percentage completed e.g. 0.10 for 10%
-    '''
+    """
+    PendingDeprecationWarning('update_progress will be deprecated in v1; ' +
+                              'use the tqdm package instead.')
+
     percent = progress*100
     nbars = int(progress*10)
     print('\r[{0}{1}] {2:.2f}%'.format('#'*nbars, ' '*(10-nbars), percent),
@@ -79,7 +90,7 @@ def update_progress(progress):
 
 
 def reconstruct(probe, shape, data, rec):
-    """ Reconstruct single x-ray beam data.
+    """Reconstruct single x-ray beam data.
 
     Parameters
     ----------
@@ -149,8 +160,7 @@ def reconstruct(probe, shape, data, rec):
 
 
 def art(probe, data, init, niter=10):
-    """ Reconstruct data.
-    """
+    """Reconstruct data using ART algorithm."""
     sx, sy = init.shape
 
     # grid frame (gx, gy)
@@ -161,7 +171,6 @@ def art(probe, data, init, niter=10):
 
     for n in trange(niter, desc="art", leave=True):
         for m in range(len(probe.history)):
-        # for m in range(3000):
             x0 = probe.history[m][0]
             y0 = probe.history[m][1]
             x1 = probe.history[m][2]
@@ -216,8 +225,7 @@ def art(probe, data, init, niter=10):
 
 
 def sirt(probe, data, init, niter=10):
-    """ Reconstruct data.
-    """
+    """Reconstruct data using SIRT algorithm."""
     sx, sy = init.shape
 
     # grid frame (gx, gy)
@@ -230,7 +238,6 @@ def sirt(probe, data, init, niter=10):
         sumdist = np.zeros(init.shape)
 
         for m in range(len(probe.history)):
-        # for m in range(100):
             x0 = probe.history[m][0]
             y0 = probe.history[m][1]
             x1 = probe.history[m][2]
@@ -287,8 +294,7 @@ def sirt(probe, data, init, niter=10):
 
 
 def mlem(probe, data, init, niter=10):
-    """ Reconstruct data.
-    """
+    """Reconstruct data using MLEM algorithm."""
     sx, sy = init.shape
 
     # grid frame (gx, gy)
@@ -301,8 +307,6 @@ def mlem(probe, data, init, niter=10):
         sumdist = np.zeros(init.shape)
 
         for m in range(len(probe.history)):
-        # for m in range(3000):
-        # for m in range(100):
             x0 = probe.history[m][0]
             y0 = probe.history[m][1]
             x1 = probe.history[m][2]
@@ -350,17 +354,17 @@ def mlem(probe, data, init, niter=10):
             sumdist[ix[ind], iy[ind]] += dist
             sim = np.dot(dist[ind], init[ix[ind], iy[ind]])
             if not sim == 0:
-                upd = np.true_divide(data[m] , sim)
+                upd = np.true_divide(data[m], sim)
                 update[ix[ind], iy[ind]] += dist[ind] * upd
 
-        init[sumdist > 0] *= np.true_divide(update[sumdist > 0], sumdist[sumdist > 0] * sy)
+        init[sumdist > 0] *= np.true_divide(update[sumdist > 0],
+                                            sumdist[sumdist > 0] * sy)
 
     return init
 
 
 def stream(probe, data, init):
-    """ Reconstruct data.
-    """
+    """Reconstruct data."""
     sx, sy = init.shape
 
     # grid frame (gx, gy)
@@ -421,9 +425,11 @@ def stream(probe, data, init):
             sumdist[ix[ind], iy[ind]] += dist
             sim = np.dot(dist[ind], init[ix[ind], iy[ind]])
             if not sim == 0:
-                upd = np.true_divide(data[m+n] , sim)
+                upd = np.true_divide(data[m+n], sim)
                 update[ix[ind], iy[ind]] += dist[ind] * upd
 
-        # init[sumdist > 0] += np.true_divide(update[sumdist > 0], sumdist[sumdist > 0] * sy)
-        init[sumdist > 0] *= np.true_divide(update[sumdist > 0], sumdist[sumdist > 0] * sy)
+        # init[sumdist > 0] += np.true_divide(update[sumdist > 0],
+        #                                     sumdist[sumdist > 0] * sy)
+        init[sumdist > 0] *= np.true_divide(update[sumdist > 0],
+                                            sumdist[sumdist > 0] * sy)
     return init
