@@ -64,7 +64,6 @@ p = XDesignDefault()
 
 def test_plot_phantom_plain():
     plot_phantom(p)
-    # plt.show(block=True)
 
 
 def test_plot_phantom_color_map():
@@ -94,6 +93,48 @@ def test_discrete_phantom_uniform():
 
     # plt.show(block=True)
     # assert_allclose(d0, d1)
+
+
+def test_discrete_phantom_gaussian():
+    """The gaussian discrete phantom is the same after rotating 90 degrees."""
+    d0 = discrete_phantom(p, 100, ratio=10, uniform=False, prop='mass_atten')
+
+    p.rotate(np.pi/2)
+    d1 = np.rot90(discrete_phantom(p, 100, ratio=10, uniform=False,
+                  prop='mass_atten'))
+
+    # plot the error
+    plt.figure()
+    plt.imshow(d1-d0, interpolation=None)
+    plt.colorbar()
+
+    # plt.show(block=True)
+    assert_array_almost_equal(d0, d1)
+
+
+def test_sidebyside():
+        # compare sidebyside of the XDesignDefault to stored image
+        sidebyside(p)
+
+
+def test_plot_metrics():
+        pass
+
+
+def test_plot_mtf():
+        pass
+
+
+def test_plot_nps():
+        pass
+
+
+def test_plot_neq():
+        pass
+
+
+def plot_histograms():
+        pass
 
 
 if __name__ == '__main__':
