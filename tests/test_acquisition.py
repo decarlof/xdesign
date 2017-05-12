@@ -3,10 +3,10 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as np
 import os.path
-
-from xdesign.acquisition import raster_scan, sinogram
-from xdesign.material import XDesignDefault
 from numpy.testing import assert_allclose
+
+from xdesign.acquisition import *
+from xdesign.phantom import XDesignDefault
 
 
 def test_raster_scan():
