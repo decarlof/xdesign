@@ -45,11 +45,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # #########################################################################
+"""Objects and methods for computing the quality of reconstructions.
 
+.. moduleauthor:: Daniel J Ching <carterbox@users.noreply.github.com>
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
-from xdesign.material import HyperbolicConcentric, UnitCircle
 
 import scipy.ndimage
 import logging
@@ -62,7 +63,10 @@ from scipy import optimize
 from scipy.stats import norm, exponnorm, expon, ttest_ind
 from phasepack import phasecongmono as _phasecongmono
 
+from xdesign.phantom import HyperbolicConcentric, UnitCircle
+
 logger = logging.getLogger(__name__)
+
 
 __author__ = "Daniel Ching, Doga Gursoy"
 __copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
@@ -107,8 +111,8 @@ def compute_mtf(phantom, image):
         :meth:`compute_mtf_ffst`
         :meth:`compute_mtf_lwkj`
     """
-    DeprecationWarning('compute_mtf is decprecated, use compute_mtf_lwkj or ' +
-                       'compute_mtf_ffst instead')
+    warnings.warn('compute_mtf is decprecated, use compute_mtf_lwkj or ' +
+                  'compute_mtf_ffst instead', DeprecationWarning)
 
     if not isinstance(phantom, HyperbolicConcentric):
         raise TypeError
@@ -269,7 +273,7 @@ def compute_mtf_ffst(phantom, image, Ntheta=4):
 
 def compute_mtf_lwkj(phantom, image):
     """Calculate the MTF using the modulated Siemens Star method in
-    Loebich et al. (2007).
+    :cite:`loebich2007digital`.
 
     parameters
     ----------
