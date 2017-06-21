@@ -464,7 +464,7 @@ def sinogram(sx, sy, phantom, pool=None, mkwargs={}):
     return sino, probe
 
 
-def raster_scan3D(sz, sa, st, zstart=None):
+def raster_scan3D(sz, sa, st, zstart=None, m_start=0):
     """A Probe iterator for raster-scanning in 3D.
 
     The size of the probe is 1 / st.
@@ -477,6 +477,8 @@ def raster_scan3D(sz, sa, st, zstart=None):
         The number of rotation angles over PI/2
     st : int
         The number of detection pixels (or sample translations).
+    m_range : int
+        Skip the first m_start measurements before yielding
 
     Yields
     ------
@@ -494,11 +496,13 @@ def raster_scan3D(sz, sa, st, zstart=None):
     p = Probe(Point([-10, 1. / st / 2., zstart]),
               Point([10, 1. / st / 2., zstart]),
               size=1. / st)
-
+    count = 0
     for o in range(sz):
         for m in range(sa):
             for n in range(st):
-                yield p
+                if count >= m_start:
+                    yield p
+                count += 1
                 p.translate(tstep._x)
             p.translate(-st * tstep._x)
             p.rotate(theta, Point([0.5, 0.5, 0]))
