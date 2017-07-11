@@ -1218,13 +1218,13 @@ class Mesh(Entity):
     @property
     def bounding_box(self):
         """Return the axis-aligned bounding box as two numpy vectors."""
-        xmin = np.full(self.dim, np.nan)
-        xmax = np.full(self.dim, np.nan)
+        xmin = np.full(self.dim, np.inf)
+        xmax = np.full(self.dim, -np.inf)
 
         for f in self.faces:
-            fmin, fmax = f.bounding_box
-            xmin = np.fmin(xmin, fmin)
-            xmax = np.fmax(xmax, fmax)
+            bmin, bmax = f.bounding_box
+            xmin = np.fmin(xmin, bmin)
+            xmax = np.fmax(xmax, bmax)
 
         return xmin, xmax
 

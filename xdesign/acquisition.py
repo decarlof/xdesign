@@ -464,7 +464,7 @@ def sinogram(sx, sy, phantom, pool=None, mkwargs={}):
     return sino, probe
 
 
-def raster_scan3D(sz, sa, st, zstart=None, m_start=0):
+def raster_scan3D(sz, sa, st, mstart=0):
     """A Probe iterator for raster-scanning in 3D.
 
     The size of the probe is 1 / st.
@@ -477,39 +477,56 @@ def raster_scan3D(sz, sa, st, zstart=None, m_start=0):
         The number of rotation angles over PI/2
     st : int
         The number of detection pixels (or sample translations).
-    m_range : int
-        Skip the first m_start measurements before yielding
+    mstart : int
+        The starting position of the probe in the procedure.
 
     Yields
     ------
     p : Probe
+
+    Raises
+    ------
+    ValueError
+        If mstart < 0 or exceeds the number of measurements
+        If sz, sa, st <= 0
     """
+    if sz <= 0 or sa <= 0 or st <= 0:
+        raise ValueError('sz, sa, st must be greater than 0,'
+                         ' {}, {}, {}'.format(sz, sa, st))
+    mend = sz * sa * st
+    if mstart < 0 or mstart >= mend:
+        raise ValueError('The starting measure must be in the'
+                         'range 0...{}'.format(mend))
     # Step sizes of the probe.
     tstep = Point([0, 1. / st, 0])
     zstep = Point([0, 0, 1. / sz])
-    theta = np.pi / sa
-
-    # Fixed probe location.
-    if zstart is None:
-        zstart = 1. / sz / 2.
-
-    p = Probe(Point([-10, 1. / st / 2., zstart]),
-              Point([10, 1. / st / 2., zstart]),
+    full_rotation = np.pi
+    theta = full_rotation / sa
+    # Position the Probe
+    p = Probe(Point([-10, 1. / st / 2., 1. / sz / 2]),
+              Point([10, 1. / st / 2., 1. / sz / 2]),
               size=1. / st)
-    count = 0
-    for o in range(sz):
-        for m in range(sa):
-            for n in range(st):
-                if count >= m_start:
-                    yield p
-                count += 1
-                p.translate(tstep._x)
+    # Calculate where the probe will be at the step before mstart
+    t = mstart % st
+    a = (mstart // st) % sa
+    z = (mstart // (st * sa)) % sz
+    # Move the Probe
+    p.translate(z * zstep._x)
+    p.rotate(a * theta, Point([0.5, 0.5, 0]))
+    tstep.rotate(a * theta)
+    p.translate(t * tstep._x)
+    # Continue with procedure
+    for m in range(mstart, mend):
+        yield p
+        p.translate(tstep._x)
+        if (m+1) % st == 0:  # next m is beginning; move back and rotate
             p.translate(-st * tstep._x)
             p.rotate(theta, Point([0.5, 0.5, 0]))
             tstep.rotate(theta)
-        p.rotate(np.pi, Point([0.5, 0.5, 0]))
-        tstep.rotate(np.pi)
-        p.translate(zstep._x)
+        if (m+1) % (st * sa) == 0:  # next m is beginning angle rotate back
+            p.rotate(-full_rotation, Point([0.5, 0.5, 0]))
+            tstep.rotate(-full_rotation)
+            p.translate(zstep._x)
 
 
 def raster_scan(sx, sy):
