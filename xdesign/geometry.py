@@ -358,19 +358,24 @@ class Point(Entity):
 
 
 class LinearEntity(Entity):
-    """Base class for linear entities in 2D Cartesian space. e.g. :class:`.Line`,
-    :class:`.Segment`, and :class:`.Ray`.
+    """Base class for linear entities in Cartesian space.
 
-    The constructor takes two unique :class:`.Point`.
+    Defined by two unique :class:`.Point`.
 
     Attributes
     ----------
-    p1 : Point
-    p2 : Point
+    p1 : :class:`.Point`
+    p2 : :class:`.Point`
+    tangent : :class:`.Point`
+        Unit vector pointing from p1 to p2.
+    norm : float
+        Distance from p1 to p2.
+
+    See Also
+    --------
+    :class:`.Line`, :class:`.Segment`, and :class:`.Ray`.
     """
     def __init__(self, p1, p2):
-        if not isinstance(p1, Point) or not isinstance(p2, Point):
-            raise TypeError("p1 and p2 must be Points")
         if p1 == p2:
             raise ValueError('Requires two unique Points.')
         if p1.dim != p2.dim:
@@ -378,10 +383,25 @@ class LinearEntity(Entity):
         self.p1 = p1
         self.p2 = p2
         self._dim = p1.dim
+        self.tangent = p2 - p1
+        self.norm = self.tangent.norm
+        self.tangent = self.tangent / self.norm
 
     def __repr__(self):
         return "{}({}, {})".format(type(self).__name__, repr(self.p1),
                                    repr(self.p2))
+
+    def __str__(self):
+        """Return line equation."""
+        return "{} - {} -> {}".format(type(self).__name__, repr(self.p1),
+                                      repr(self.tangent))
+
+    def __eq__(self, line):
+        # Two lines are the congruent IFF parallel AND (both contain the same
+        # point OR a line created from ANY pair of points from each has the
+        # same slope.
+        return (np.all(self.tangent == line.tangent) and (self.p1 == line.p1
+                or np.all(self.tangent == Line(self.p1, line.p1).tangent)))
 
     @property
     def vertical(self):
@@ -394,48 +414,21 @@ class LinearEntity(Entity):
         return self.p1.y == self.p2.y
 
     @property
-    def slope(self):
-        """Returns the slope of the line."""
-        if self.vertical:
-            return np.inf
-        else:
-            return ((self.p2.y - self.p1.y) /
-                    (self.p2.x - self.p1.x))
-
-    @property
     def points(self):
         """Returns the two points used to define this linear entity as a
         2-tuple."""
         return (self.p1, self.p2)
 
-    # @property
-    # def bounds(self):
-    #     """Return a tuple (xmin, ymin, xmax, ymax) representing the
-    #     bounding rectangle for the geometric figure.
-    #     """
-    #     xs = [p.x for p in self.points]
-    #     ys = [p.y for p in self.points]
-    #     return (min(xs), min(ys), max(xs), max(ys))
-
-    @property
-    def length(self):
-        """Returns the length of the segment between p1 and p2."""
-        return self.p1.distance(self.p2)
-
-    @property
-    def tangent(self):
-        """Returns the unit tangent vector."""
-        dx = (self.p2._x - self.p1._x) / self.length
-        return Point(dx)
-
     @property
     def normal(self):
-        """Return the unit normal vector."""
-        dx = (self.p2._x - self.p1._x) / self.length
-        R = np.array([[0, 1],
-                      [-1,  0]])
-        n = np.dot(R, dx)
-        return Point(n)
+        """Return the unit normal vector or plane."""
+        if self.dim == 2:
+            R = np.array([[0, 1],
+                          [-1, 0]])
+            n = np.dot(R, self.tangent)
+            return n
+        else:
+            raise NotImplementedError("Normal for 3D not implemented")
 
     @property
     def numpy(self):
@@ -459,6 +452,35 @@ class LinearEntity(Entity):
         defined by an axis and a point."""
         self.p1.rotate(theta, point, axis)
         self.p2.rotate(theta, point, axis)
+        self.tangent.rotate(theta, point, axis)
+
+
+class Plane(LinearEntity):
+    """"""
+    def intercept(self, N):
+        """Return the intercept for dimension `N`."""
+        try:
+            self.d / self.n[N]
+        except ZeroDivisionError:
+            return np.inf
+        except IndexError:
+            return 0
+
+    @property
+    def xintercept(self):
+        """Return the x-intercept."""
+        return self.intercept(0)
+
+    @property
+    def yintercept(self):
+        """Return the y-intercept."""
+        return self.intercept(1)
+
+    @property
+    def standard(self):
+        """Returns coeffients for the first N standard equation coefficients.
+        The N+1th is returned separately."""
+        return self.n, self.d
 
 
 class Line(LinearEntity):
@@ -474,53 +496,6 @@ class Line(LinearEntity):
 
     def __init__(self, p1, p2):
         super(Line, self).__init__(p1, p2)
-
-    def __str__(self):
-        """Return line equation."""
-        if self.vertical:
-            return "x = %s" % self.p1.x
-        elif self.dim == 2:
-            return "y = %sx + %s" % (self.slope, self.yintercept)
-        else:
-            A, B = self.standard
-            return "%sx " % '+ '.join([str(n) for n in A]) + "= " + str(B)
-
-    def __eq__(self, line):
-        return (self.slope, self.yintercept) == (line.slope, line.yintercept)
-
-    def intercept(self, n):
-        """Calculates the intercept for the nth dimension."""
-        if n > self._dim:
-            return 0
-        else:
-            A, B = self.standard
-            if A[n] == 0:
-                return np.inf
-            else:
-                return B/A[n]
-
-    @property
-    def xintercept(self):
-        """Return the x-intercept."""
-        if self.horizontal:
-            return np.inf
-        else:
-            return self.p1.x - 1 / self.slope * self.p1.y
-
-    @property
-    def yintercept(self):
-        """Return the y-intercept."""
-        if self.vertical:
-            return np.inf
-        else:
-            return self.p1.y - self.slope * self.p1.x
-
-    @property
-    def standard(self):
-        """Returns coeffients for the first N-1 standard equation coefficients.
-        The Nth is returned separately."""
-        A = np.stack([self.p1._x, self.p2._x], axis=0)
-        return calc_standard(A)
 
     def distance(self, other):
         """Returns the closest distance between entities."""
