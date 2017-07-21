@@ -849,24 +849,41 @@ def _points_to_array(points):
 class Polygon(Entity):
     """A convex polygon in 2D cartesian space.
 
-    It is defined by a number of distinct vertices of class :class:`.Point`.
-    Superclasses include :class:`.Square`, :class:`.Triangle`, etc.
+    Polygons may be inverted with the `sign` attribute. An inverted Polygon
+    has a negative area and contains the complement of the same non-inverted
+    Polygon.
+
+    .. note:: No checks are made to verify that the Polygon is actually convex.
 
     Attributes
     ----------
-    vertices : List of Points
+    vertices : (2, N) :class:`numpy.ndarray`
+        The vertex locations
+    edges : (N, 3) :class:`numpy.ndarray`
+        The half-space coefficents for each edge. Ordered from the 0,1 edge to
+        the N,0 edge.
     sign : int (-1 or 1)
-        The sign of the area
+        The sign of the area. -1 if the center of the Polygon is not contained
+        by the Polygon.
+
+    See Also
+    --------
+    :class:`.Square`, :class:`.Triangle`
     """
 
     def __init__(self, vertices, sign=1):
-        for v in vertices:
-            if not isinstance(v, Point):
-                raise TypeError("vertices must be of type Point.")
         super(Polygon, self).__init__()
-        self.vertices = vertices
-        self._dim = vertices[0].dim
+        self._dim = 2
+        self.vertices = np.stack(vertices, axis=1)
+        # compute edge equations
+        numverts = self.numverts
+        edge_ends = np.zeros([numverts, 2, 2])
+        for i in range(numverts):
+            edge_ends[i, :, :] = self.vertices[:, [i, i+1 % numverts]]
+        self.edges = half_space(edge_ends, self.center)
+        # flip coefficents if Polygon is inverted
         self.sign = sign
+        self.edges[:, -1] = sign * self.edges[:, -1]
 
     def __repr__(self):
         return "Polygon(vertices={}, sign={})".format(repr(self.vertices),
@@ -882,7 +899,7 @@ class Polygon(Entity):
 
     @property
     def numverts(self):
-        return len(self.vertices)
+        return self.vertices.shape[1]
 
     @property
     def list(self):
@@ -971,25 +988,6 @@ class Polygon(Entity):
         for m in range(self.numverts):
             r = max(r, self.vertices[m].distance(c))
         return r
-
-    @cached_property
-    def half_space(self):
-        """Returns the half space polytope respresentation of the polygon."""
-        assert(self.dim > 0), self.dim
-        A = np.ndarray((self.numverts, self.dim))
-        B = np.ndarray(self.numverts)
-
-        for i in range(0, self.numverts):
-            edge = Line(self.vertices[i], self.vertices[(i+1) % self.numverts])
-            A[i, :], B[i] = edge.standard
-
-            # test for positive or negative side of line
-            if self.center._x.dot(A[i, :]) > B[i]:
-                A[i, :] = -A[i, :]
-                B[i] = -B[i]
-
-        p = pt.Polytope(A, B)
-        return p
 
     # Methods
     def translate(self, vector):
@@ -1085,6 +1083,37 @@ class Polygon(Entity):
             return border.contains_points(np.atleast_2d(x))
         else:
             return np.logical_not(border.contains_points(np.atleast_2d(x)))
+
+
+def half_space(points, inside):
+    """Return a half-space from N+1 points.
+
+    A half-space is defined as follows::
+
+        n0*x0 + n1*x1 + n2*x2 ... <= d
+
+    Parameters
+    ----------
+    points : (..., N, N) :class:`numpy.ndarray`
+        N points on the N-hyperplane as column vectors
+    inside : (..., N,) :class:`numpy.ndarray`
+        One point inside the half-space
+
+    Return
+    ------
+    n : (..., N,) :class:`numpy.ndarray`
+        Unit normal of the hyperplane
+    d : (..., 1,) :class:`numpy.ndarray`
+        Distance from origin to the hyperplane
+    """
+    raise NotImplementedError("half_space hasn't been tested")
+    # get coeffients of standard hyperplane equation
+    n, d = calc_standard(points)
+    # test for positive or negative side of line
+    flip_sign = inside.dot(n) > d
+    n[..., flip_sign, :] = -n[..., flip_sign, :]
+    d[flip_sign] = -d[flip_sign]
+    return n, d
 
 
 class Triangle(Polygon):
