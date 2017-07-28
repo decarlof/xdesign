@@ -1447,6 +1447,8 @@ class NOrthotope(pt.Polytope):
     # Methods
     def translate(self, vector):
         """Translate by a vector."""
+        vector = np.asarray(vector)
+        vector.shape = (vector.size, 1)
         pt.polytope._translate(self, vector)
 
     def rotate(self, theta, point=None, axis=None):
@@ -1457,6 +1459,7 @@ class NOrthotope(pt.Polytope):
             d = 0
         else:
             d = point._x
+            d.shape = (d.size, 1)
 
         pt.polytope._translate(self, -d)
         pt.polytope._rotate(self, i=0, j=1, theta=theta)
