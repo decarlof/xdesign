@@ -45,9 +45,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # #########################################################################
-
-"""
-Defines objects and methods for simulated data acquisition.
+"""Define objects and methods for simulated data acquisition.
 
 This not only includes physical things like :py:class:`.Probe`, detectors,
 turntables, and lenses, but non-physical things such as scanning patterns.
@@ -56,25 +54,24 @@ turntables, and lenses, but non-physical things such as scanning patterns.
 .. moduleauthor:: Daniel J Ching <carterbox@users.noreply.github.com>
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
-import logging
-import numpy as np
-from cached_property import cached_property
-from xdesign.constants import RADIUS, DEFAULT_ENERGY
-from xdesign.geometry import *
-from xdesign.geometry import halfspacecirc, clip_SH
-
-logger = logging.getLogger(__name__)
-
-
 __author__ = "Doga Gursoy"
 __copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
 __docformat__ = 'restructuredtext en'
-__all__ = ['Probe',
-           'raster_scan2D',
-           ]
+__all__ = [
+    'Probe',
+    'raster_scan2D',
+]
+
+import logging
+
+import numpy as np
+from cached_property import cached_property
+
+from xdesign.constants import RADIUS, DEFAULT_ENERGY
+from xdesign.geometry import *
+from xdesign.geometry.intersect import halfspacecirc, clip_SH
+
+logger = logging.getLogger(__name__)
 
 
 class Probe(Line):
@@ -83,7 +80,6 @@ class Probe(Line):
     Attributes
     ----------
     p1, p2 : :py:class:`xdesign.geometry.Point`
-        Two points which define the initial position of the probe.
         .. deprecated:: 0.4
             Measure now uses theta, h, v coordinates instead.
     size : float, cm (default: 0.0 cm)
@@ -93,13 +89,15 @@ class Probe(Line):
     energy : float, eV (default: 15 eV)
         The energy of the probe in eV.
 
-
     .. todo::
         Implement additional attributes for Probe such as wavelength,
         etc.
+
     """
-    def __init__(self, p1=None, p2=None, size=0.0, intensity=1.0,
-                 energy=DEFAULT_ENERGY):
+
+    def __init__(
+        self, p1=None, p2=None, size=0.0, intensity=1.0, energy=DEFAULT_ENERGY
+    ):
         if p1 is None or p2 is None:
             p1 = Point([RADIUS, 0])
             p2 = Point([-RADIUS, 0])
@@ -110,8 +108,9 @@ class Probe(Line):
 
     def __repr__(self):
         return "Probe({}, {}, size={}, intensity={}, energy={})".format(
-                repr(self.p1), repr(self.p2), repr(self.size),
-                repr(self.intensity), repr(self.energy))
+            repr(self.p1), repr(self.p2), repr(self.size), repr(self.intensity),
+            repr(self.energy)
+        )
 
     def __str__(self):
         """Return the string respresentation of the Beam."""
@@ -129,11 +128,14 @@ class Probe(Line):
         ----------
         theta, h
             The coordinates of the Probe.
+
         """
         if perc is not None:
-            raise UserWarning("Noise during acquisition has been removed. "
-                              "Use post-processing to add noise "
-                              "instead.")
+            raise UserWarning(
+                "Noise during acquisition has been removed. "
+                "Use post-processing to add noise "
+                "instead."
+            )
         assert theta.shape == h.shape, "theta, h, must be the same shape"
         original_shape = theta.shape
         newdata = np.zeros(theta.size)
@@ -143,8 +145,9 @@ class Probe(Line):
         for i in range(theta.size):
             self.p1 = Point([srcx[i], srcy[i]])
             self.p2 = Point([detx[i], dety[i]])
-            newdata[i] = (self.intensity
-                          * np.exp(-self._get_attenuation(phantom)))
+            newdata[i] = (
+                self.intensity * np.exp(-self._get_attenuation(phantom))
+            )
         logger.debug("Probe.measure: {}".format(newdata))
         return newdata.reshape(original_shape)
 
@@ -156,8 +159,10 @@ class Probe(Line):
             attenuation = 0.0
         else:
             # [ ] = [cm^2] / [cm] * [1/cm]
-            attenuation = (intersection / self.cross_section
-                           * phantom.material.linear_attenuation(self.energy))
+            attenuation = (
+                intersection / self.cross_section *
+                phantom.material.linear_attenuation(self.energy)
+            )
 
         if phantom.geometry is None or intersection > 0:
             # check the children for containers and intersecting geometries
@@ -168,17 +173,19 @@ class Probe(Line):
 
     @property
     def cross_section(self):
-        """Return the cross-sectional area of a square beam"""
+        """Return the cross-sectional area of a square beam."""
         return self.size
         # return np.pi * self.size**2 / 4
 
     def half_space(self):
-        """Returns the half space polytope respresentation of the probe."""
+        """Return the half space polytope respresentation of the probe."""
         half_space = list()
 
         for i in range(2):
-            edge = Line(self.p1 + self.normal * self.size / 2 * (-1)**i,
-                        self.p2 + self.normal * self.size / 2 * (-1)**i)
+            edge = Line(
+                self.p1 + self.normal * self.size / 2 * (-1)**i,
+                self.p2 + self.normal * self.size / 2 * (-1)**i
+            )
             A, B = edge.standard
 
             # test for positive or negative side of line
@@ -191,23 +198,23 @@ class Probe(Line):
         return half_space
 
     def intersect(self, polygon):
-        """Return the intersection with polygon"""
+        """Return the intersection with polygon."""
         return clip_SH(self.half_space(), polygon)
 
 
 def thv_to_zxy(theta, h):
-    """Convert coordinates from (theta, h, v) to (z, x, y) space"""
+    """Convert coordinates from (theta, h, v) to (z, x, y) space."""
     cos_p = np.cos(theta)
     sin_p = np.sin(theta)
-    srcx = +RADIUS*cos_p - h*sin_p
-    srcy = +RADIUS*sin_p + h*cos_p
-    detx = -RADIUS*cos_p - h*sin_p
-    dety = -RADIUS*sin_p + h*cos_p
+    srcx = +RADIUS * cos_p - h * sin_p
+    srcy = +RADIUS * sin_p + h * cos_p
+    detx = -RADIUS * cos_p - h * sin_p
+    dety = -RADIUS * sin_p + h * cos_p
     return srcx, srcy, detx, dety
 
 
 def beamintersect(beam, geometry):
-    """Intersection area of infinite beam with a geometry"""
+    """Intersection area of infinite beam with a geometry."""
 
     logger.debug('BEAMINTERSECT: {}'.format(repr(geometry)))
 
@@ -224,7 +231,7 @@ def beamintersect(beam, geometry):
 
 
 def beammesh(beam, mesh):
-    """Intersection area of infinite beam with polygonal mesh"""
+    """Intersection area of infinite beam with polygonal mesh."""
     if beam.distance(mesh.center) > mesh.radius:
         logger.debug("BEAMMESH: skipped because of radius.")
         return 0
@@ -238,7 +245,7 @@ def beammesh(beam, mesh):
 
 
 def beampoly(beam, poly):
-    """Intersection area of an infinite beam with a polygon"""
+    """Intersection area of an infinite beam with a polygon."""
     if beam.distance(poly.center) > poly.radius:
         logger.debug("BEAMPOLY: skipped because of radius.")
         return 0
@@ -266,11 +273,12 @@ def beamcirc(beam, circle):
     -------
     a : scalar
         Area of the intersected region.
+
     """
     r = circle.radius
-    w = beam.size/2
+    w = beam.size / 2
     p = super(Probe, beam).distance(circle.center)
-    assert(p >= 0)
+    assert (p >= 0)
 
     logger.debug("BEAMCIRC: r = %f, w = %f, p = %f" % (r, w, p))
 
@@ -291,7 +299,7 @@ def beamcirc(beam, circle):
             f = halfspacecirc(p - w, r)
 
     a = np.pi * r**2 * f
-    assert(a >= 0), a
+    assert (a >= 0), a
     return a
 
 
@@ -312,8 +320,9 @@ def raster_scan2D(sa, st, meta=False):
     -------
     theta, h, v : :py:class:`np.array` (M,)
         Probe positions for scan
+
     """
-    theta = np.linspace(0, np.pi*2, sa, endpoint=False)
+    theta = np.linspace(0, np.pi * 2, sa, endpoint=False)
     h = np.linspace(0, 1, st, endpoint=False) - 0.5
     theta, h = np.meshgrid(theta, h)
     return theta, h

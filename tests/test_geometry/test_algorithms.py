@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # #########################################################################
-# Copyright (c) 2015, UChicago Argonne, LLC. All rights reserved.         #
+# Copyright (c) 2016, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
 # Copyright 2015. UChicago Argonne, LLC. This software was produced       #
 # under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
@@ -46,22 +46,11 @@
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # #########################################################################
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+__author__ = "Doga Gursoy"
+__copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
+__docformat__ = 'restructuredtext en'
 
-from xdesign.geometry import *
-from xdesign.phantom import *
-from xdesign.acquisition import *
-from xdesign.algorithms import *
-from xdesign.metrics import *
-from xdesign.plot import *
-from xdesign.material import *
 
-import logging
-logging.basicConfig()
-
-try:
-    import pkg_resources
-    __version__ = pkg_resources.working_set.require("xdesign")[0].version
-except:
-    pass
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(exit=False)

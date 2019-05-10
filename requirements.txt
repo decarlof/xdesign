@@ -1,9 +1,4 @@
-python
-nose
-six
+cached-property
+matplotlib
 numpy
 scipy
-matplotlib
-requests
-phasepack
-cached-property

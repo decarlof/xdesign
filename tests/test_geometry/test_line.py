@@ -4,7 +4,7 @@
 # #########################################################################
 # Copyright (c) 2016, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2016. UChicago Argonne, LLC. This software was produced       #
+# Copyright 2015. UChicago Argonne, LLC. This software was produced       #
 # under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
 # Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
 # U.S. Department of Energy. The U.S. Government has rights to use,       #
@@ -46,54 +46,40 @@
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # #########################################################################
 
-"""Constants in cgs units.
-
-Attributes
-----------
-AVOGADRO_NUMBER : float
-    Avagadro constant [1/mol]
-BOLTZMANN_CONSTANT : float
-    Boltzmann constant [erg/k]
-CLASSICAL_ELECTRON_RADIUS : float
-    Classical electron radius [cm]
-ELECTRONIC_CHARGE : float
-    Electronic charge [esu]
-ELECTRON_VOLT : float
-    Electron volt (keV) [erg]
-ELECTRON_MASS : float
-    Electron mass [g]
-FINE_STRUCTURE_CONSTANT : float
-    Fine structure constant
-PLANCK_CONSTANT : float
-    Reduced planck's constant [keV*s]
-PROTON_MASS : float
-    Proton mass [g]
-SPEED_OF_LIGHT : float
-    Speed of light in vacuum [cm/s]
-THOMPSON_CROSS_SECTION : float
-    Thomson cross section [cm^2]
-PI : float
-    Ratio of a circle's circumference to its diameter
-"""
-
-AVOGADRO_NUMBER = 6.02214129e+23
-BOLTZMANN_CONSTANT = 1.3806488e-16
-CLASSICAL_ELECTRON_RADIUS = 2.8179402894e-13
-ELECTRONIC_CHARGE = 4.80320425e-10
-ELECTRON_VOLT = 1.602176565e-9
-ELECTRON_MASS = 9.10938188e-28
-FINE_STRUCTURE_CONSTANT = 7.2973525698e-3
-PLANCK_CONSTANT = 6.58211928e-19
-PROTON_MASS = 1.67261777e-24
-SPEED_OF_LIGHT = 299792458e+2
-THOMPSON_CROSS_SECTION = 6.652458734e-25
-PI = 3.14159265359
-
-RADIUS = 10
-
-DEFAULT_ENERGY = 15.0
+from xdesign.geometry import *
+from numpy.testing import assert_allclose, assert_raises, assert_equal
+import numpy as np
 
 
-def wavelength(energy):
-    """Return wavelength [cm] of light given energy [keV]."""
-    return 2 * PI * PLANCK_CONSTANT * SPEED_OF_LIGHT / energy
+__author__ = "Doga Gursoy"
+__copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
+__docformat__ = 'restructuredtext en'
+
+
+def test_Line_slope_vertical():
+    line = Line(Point([0, -1]), Point([0, 1]))
+    assert_allclose(line.slope, np.inf, rtol=1e-6)
+
+
+def test_Line_yintercept_vertical():
+    line = Line(Point([0, -1]), Point([0, 1]))
+    assert_allclose(line.yintercept, np.inf, rtol=1e-6)
+
+
+def test_Line_slope():
+    line = Line(Point([-1, 0]), Point([1, 2]))
+    assert_allclose(line.slope, 1, rtol=1e-6)
+
+
+def test_Line_yintercept():
+    line = Line(Point([-1, 0]), Point([1, 2]))
+    assert_allclose(line.yintercept, 1, rtol=1e-6)
+
+
+def test_Line_same_points():
+    assert_raises(ValueError, Line, Point([1, 2]), Point([1, 2]))
+
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(exit=False)

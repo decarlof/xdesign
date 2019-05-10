@@ -4,7 +4,7 @@
 # #########################################################################
 # Copyright (c) 2016, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2015. UChicago Argonne, LLC. This software was produced       #
+# Copyright 2016. UChicago Argonne, LLC. This software was produced       #
 # under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
 # Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
 # U.S. Department of Energy. The U.S. Government has rights to use,       #
@@ -46,125 +46,11 @@
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # #########################################################################
 
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
-from xdesign import *
-from numpy.testing import *
-import warnings
-from copy import deepcopy
+import logging
 
-__author__ = "Daniel Ching"
+logger = logging.getLogger(__name__)
+
+__author__ = "Daniel Ching, Doga Gursoy"
 __copyright__ = "Copyright (c) 2016, UChicago Argonne, LLC."
 __docformat__ = 'restructuredtext en'
-
-
-p = XDesignDefault()
-
-
-def test_plot_phantom_plain():
-    plot_phantom(p)
-    plt.suptitle('test_plot_phantom_plain')
-
-
-def test_plot_phantom_color_map():
-    plot_phantom(p, labels=True, c_props=['linear_attenuation'])
-    plt.suptitle('test_plot_phantom_color_map')
-
-
-def test_sidebyside():
-    sidebyside(p, size=100)
-    plt.suptitle('test_sidebyside')
-
-
-def test_discrete_geometry():
-
-    plt.figure()
-    plt.suptitle('test_discrete_geometry')
-
-    # define the points of the mesh
-    a = Point([0.6, 0.6])
-    b = Point([0.6, 0.4])
-    c = Point([0.8, 0.4])
-    d = (a + c) / 2
-    e = (a + b) / 2
-
-    t0 = Triangle(deepcopy(b), deepcopy(c), deepcopy(d))
-
-    corner, patch = discrete_geometry(t0, 1/100)
-    plt.subplot(131)
-    plt.imshow(patch)
-    plt.title("single triangle")
-
-    # construct and reposition the mesh
-    m0 = Mesh()
-    m0.append(Triangle(deepcopy(a), deepcopy(e), deepcopy(d)))
-    m0.append(Triangle(deepcopy(b), deepcopy(d), deepcopy(e)))
-
-    corner, patch = discrete_geometry(m0, 1/100)
-    plt.subplot(132)
-    plt.imshow(patch)
-    plt.title("double triangle mesh")
-
-    # define the circles
-    m1 = Mesh()
-    m1.append(Circle(Point([0.3, 0.5]), radius=0.1))
-    m1.append(-Circle(Point([0.3, 0.5]), radius=0.02))
-
-    corner, patch = discrete_geometry(m1, 1/100)
-    plt.subplot(133)
-    plt.imshow(patch)
-    plt.title("double circle mesh")
-
-    plt.tight_layout()
-
-
-def test_discrete_phantom_uniform(size=100, ratio=9):
-    """The uniform discrete phantom is the same after rotating 90 degrees."""
-
-    d0 = discrete_phantom(p, size, ratio=ratio, prop='mass_attenuation')
-
-    p.rotate(theta=np.pi/2, point=Point([0.5, 0.5]))
-    d1 = np.rot90(discrete_phantom(p, size, ratio=ratio,
-                                   prop='mass_attenuation'))
-
-    # plot rotated phantom
-    plot_phantom(p)
-    plt.suptitle('rotated phantom')
-
-    # plot the error
-    plt.figure()
-    plt.imshow(d1-d0, interpolation=None)
-    plt.colorbar()
-    plt.suptitle('test_discrete_phantom_uniform')
-
-    # plt.show(block=True)
-    # assert_allclose(d0, d1)
-
-
-if __name__ == '__main__':
-    test_plot_phantom_plain()
-    test_plot_phantom_color_map()
-    test_sidebyside()
-    test_discrete_geometry()
-    test_discrete_phantom_uniform()
-
-    plt.show(block=True)
-
-# def test_discrete_phantom_gaussian():
-#     """Tests if the gaussian discrete phantom is the same after rotating the
-#     phantom 90 degrees.
-#     """
-#     d0 = discrete_phantom(p, 100, ratio=10, uniform=False, prop='mass_attenuation')
-#
-#     p.rotate(np.pi/2)
-#     d1 = np.rot90(discrete_phantom(p, 100, ratio=10, uniform=False,
-#                   prop='mass_attenuation'))
-#
-#     # plot the error
-#     plt.figure()
-#     plt.imshow(d1-d0, interpolation=None)
-#     plt.colorbar()
-#
-#     # plt.show(block=True)
-#     assert_array_almost_equal(d0, d1)
+__all__ = []

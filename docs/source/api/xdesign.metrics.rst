@@ -2,26 +2,57 @@
 ======================
 
 .. automodule:: xdesign.metrics
-   :members:
-   :show-inheritance:
-   :undoc-members:
+  :members:
+  :show-inheritance:
+  :undoc-members:
 
-   .. rubric:: **Classes:**
 
-   .. autosummary::
+Coverage metrics
+----------------
 
-      ImageQuality
+.. automodule:: xdesign.metrics.coverage
+  :members:
+  :show-inheritance:
+  :undoc-members:
 
-   .. rubric:: **Functions:**
+  .. rubric:: **Functions:**
 
-   .. autosummary::
+  .. autosummary::
 
-      compute_PCC
-      compute_likeness
-      compute_background_ttest
-      compute_mtf
-      compute_mtf_ffst
-      compute_mtf_lwkj
-      compute_nps_ffst
-      compute_neq_d
-      compute_quality
+    coverage_approx
+
+
+Full-reference metrics
+----------------------
+
+.. automodule:: xdesign.metrics.fullref
+  :members:
+  :show-inheritance:
+  :undoc-members:
+
+  .. rubric:: **Functions:**
+
+  .. autosummary::
+
+    pcc
+    ssim
+    msssim
+
+
+Standards-based metrics
+-----------------------
+
+.. automodule:: xdesign.metrics.standards
+  :members:
+  :show-inheritance:
+  :undoc-members:
+
+  .. rubric:: **Functions:**
+
+  .. autosummary::
+
+    compute_mtf
+    compute_mtf_ffst
+    compute_mtf_lwkj
+    compute_nps_ffst
+    compute_neq_d
